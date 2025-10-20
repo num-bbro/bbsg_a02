@@ -1,0 +1,45 @@
+use axum::routing::get;
+use std::error::Error;
+
+pub async fn web1() -> Result<(), Box<dyn Error>> {
+    println!("run1");
+    let app = axum::Router::new()
+        // field
+        .route("/sbb01", get(crate::web::sbb01::sbb01))
+        // sub
+        .route("/sba01", get(crate::sba01::sba01))
+        .route("/sba02", get(crate::sba02::sba02))
+        .route("/sba03", get(crate::sba03::sba03))
+        // sub
+        .route("/sb01", get(crate::sb01::sb01))
+        .route("/sb02", get(crate::sb02::sb02))
+        .route("/sb03", get(crate::sb03::sb03))
+        .route("/sb04", get(crate::sb04::sb04))
+        .route("/sb05", get(crate::sb05::sb05))
+        // trans
+        .route("/tr01", get(crate::tr01::tr01))
+        .route("/tr02", get(crate::tr02::tr02))
+        .route("/tr03", get(crate::tr03::tr03))
+        .route("/tr04", get(crate::tr04::tr04))
+        .route("/tr05", get(crate::tr05::tr05))
+        .route("/tr06", get(crate::tr06::tr06))
+        // ___
+        .route("/a01", get(crate::a01::a01))
+        .route("/a02", get(crate::a02::a02))
+        .route("/a03", get(crate::a03::a03))
+        .route("/q02", get(crate::web::q02::q02))
+        .route("/p02", get(crate::web::p02::p02))
+        .route("/p03", get(crate::web::p03::p03))
+        .route("/p04", get(crate::web::p04::p04))
+        .route("/p05", get(crate::web::p05::p05))
+        .route("/p06", get(crate::web::p06::p06))
+        .route("/p07", get(crate::web::p07::p07))
+        .route("/p08", get(crate::web::p08::p08))
+        .route("/m01", get(crate::m01::m01))
+        .route("/m02", get(crate::m02::m02))
+        .route("/", get(crate::sba01::sba01));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+    Ok(())
+}
