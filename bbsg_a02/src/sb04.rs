@@ -27,7 +27,7 @@ const FLD_LIST: [(VarType, &str); 14] = [
     (VarType::ChgStnCap, ""),
     (VarType::ChgStnSell, ""),
     (VarType::MvPowSatTr, ""),
-    (VarType::PowSolar, ""),
+    (VarType::SolarRoof, ""),
     (VarType::ZoneTr, ""),
     (VarType::PopTr, ""),
     (VarType::MvVspp, ""),
@@ -63,9 +63,9 @@ pub async fn sb04() -> WebTemp {
         return WebTemp::default();
     };
     assv.sort_by(|b, a| {
-        a.v[VarType::PowSolar.tousz()]
+        a.v[VarType::SolarRoof.tousz()]
             .v
-            .partial_cmp(&b.v[VarType::PowSolar.tousz()].v)
+            .partial_cmp(&b.v[VarType::SolarRoof.tousz()].v)
             .unwrap()
     });
 

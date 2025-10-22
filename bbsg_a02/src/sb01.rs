@@ -27,7 +27,7 @@ const FLD_LIST: [(VarType, &str); 14] = [
     (VarType::ChgStnCap, ""),
     (VarType::ChgStnSell, ""),
     (VarType::MvPowSatTr, ""),
-    (VarType::PowSolar, ""),
+    (VarType::SolarRoof, ""),
     (VarType::ZoneTr, "/tr02"),
     (VarType::PopTr, "/tr02"),
     (VarType::MvVspp, ""),

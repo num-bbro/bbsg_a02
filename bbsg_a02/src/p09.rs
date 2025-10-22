@@ -6,6 +6,11 @@ pub async fn web1() -> Result<(), Box<dyn Error>> {
     let app = axum::Router::new()
         // field
         .route("/sbb01", get(crate::web::sbb01::sbb01))
+        .route("/sbb02", get(crate::web::sbb02::sbb02))
+        .route("/sbb03", get(crate::web::sbb03::sbb03))
+        .route("/sbb04", get(crate::web::sbb04::sbb04))
+        .route("/sbb05", get(crate::web::sbb05::sbb05))
+        .route("/sbb06", get(crate::web::sbb06::sbb06))
         // sub
         .route("/sba01", get(crate::sba01::sba01))
         .route("/sba02", get(crate::sba02::sba02))
@@ -39,7 +44,7 @@ pub async fn web1() -> Result<(), Box<dyn Error>> {
         .route("/m02", get(crate::m02::m02))
         .route("/", get(crate::sba01::sba01));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:4000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
     Ok(())
 }

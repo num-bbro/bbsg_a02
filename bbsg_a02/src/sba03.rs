@@ -23,22 +23,6 @@ const FLD_LIST: [(VarType, &str, i32); 12] = [
     (VarType::SubPowCap, "", 0),
     (VarType::NoMet1Ph, "", 0),
     (VarType::NoMet3Ph, "", 0),
-    //
-    /*
-    (VarType::SmallSellTr, "", 0),
-    (VarType::HmChgEvTr, "/tr01", 0),
-    (VarType::CntLvPowSatTr, "", 0),
-    (VarType::ChgStnCap, "", 0),
-    //(VarType::ChgStnSell, ""),
-    (VarType::MvPowSatTr, "", 0),
-    (VarType::PowSolar, "", 0),
-    (VarType::ZoneTr, "/tr02", 0),
-    (VarType::PopTr, "/tr02", 0),
-    (VarType::MvVspp, "", 0),
-    (VarType::HvSpp, "", 0),
-    //(VarType::UnbalPow, ""),
-    (VarType::CntUnbalPow, "", 0),
-    */
     (VarType::Uc1Val, "", 0),
     (VarType::Uc2Val, "", 0),
     (VarType::Uc3Val, "", 0),
@@ -87,7 +71,7 @@ pub async fn sba03() -> WebTemp {
         println!("NO rw3.bin file:");
         return WebTemp::default();
     };
-    println!("read normalized data");
+    //println!("read normalized data");
     // ==== read rw3 data
     let Ok((mut assv, _)): Result<(Vec<crate::dcl::PeaAssVar>, usize), _> =
         bincode::decode_from_slice(&buf[..], bincode::config::standard())

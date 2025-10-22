@@ -20,7 +20,7 @@ use crate::p08::SubInfo;
 use std::collections::HashMap;
 
 #[derive(Template, WebTemplate, Debug, Default)]
-#[template(path = "sbb01.html")]
+#[template(path = "sbb02.html")]
 pub struct WebTemp {
     name: String,
     assv: Vec<PeaAssVar>,
@@ -28,7 +28,7 @@ pub struct WebTemp {
     se_fld: VarType,
 }
 
-pub async fn sbb01(para: Query<Param>) -> WebTemp {
+pub async fn sbb02(para: Query<Param>) -> WebTemp {
     let mut fldm = HashMap::<String, VarType>::new();
     for vt in &SHOW_FLDS {
         let fd = format!("{:?}", vt);
@@ -44,17 +44,24 @@ pub async fn sbb01(para: Query<Param>) -> WebTemp {
         return WebTemp::default();
     };
     let name = format!("FIELD {fld}");
-    let Ok(buf) = std::fs::read(format!("{DNM}/000-sbrw.bin")) else {
+    let Ok(buf) = std::fs::read(format!("{DNM}/000-pvrw.bin")) else {
+        //let Ok(buf) = std::fs::read(format!("{DNM}/000-sbrw.bin")) else {
         println!("NO rw3.bin file:");
         return WebTemp::default();
     };
     // ==== read rw3 data
-    let Ok((assv, _)): Result<(Vec<PeaAssVar>, usize), _> =
+    let Ok((mut assv, _)): Result<(Vec<PeaAssVar>, usize), _> =
         bincode::decode_from_slice(&buf[..], bincode::config::standard())
     else {
         println!("Failed to decode rw3:");
         return WebTemp::default();
     };
+    assv.sort_by(|b, a| {
+        a.v[VarType::FirCstRate.tousz()]
+            .v
+            .partial_cmp(&b.v[VarType::FirCstRate.tousz()].v)
+            .unwrap()
+    });
     //let sbif = sub_inf(); //HashMap<String, SubstInfo>
     let sbif = ld_sub_info();
     WebTemp {

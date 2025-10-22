@@ -40,8 +40,8 @@
   transform: rotate(180deg);
   width: 50px;
 }
-{%~ for y in 0..=SSHOW_YEAR_END-SSHOW_YEAR_BEG %}
-.hdyr_{{y}} {
+{% for h in SHOW_FLDS2 %}
+.hdyr_{{-h.tousz()-}} {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   color: #FFFFFF;
@@ -71,8 +71,8 @@
 .cell_x {
     text-align: center;
 }
-{%~ for y in 0..=SSHOW_YEAR_END-SSHOW_YEAR_BEG %}
-.cell_{{-y-}} {
+{% for h in SHOW_FLDS2 %}
+.cell_{{-h.tousz()-}} {
     text-align: right;
     width: 40px;
 }
@@ -92,15 +92,6 @@
 {% include "sbb-menu.html" %}
 </div>
 
-<!-- choose field -->
-<table class="blueTable">
-<tr>
-{% for h in SHOW_FLDS %}
-{% let hh = format!("{h:?}") %}
-<th class="field"><a href="sbb01?fld={{hh}}">{{hh}}</a></th>
-{% endfor %}
-</tr>
-</table>
 <div>{{name}}</div>
 
 <table class="blueTable">
@@ -108,13 +99,12 @@
 
 <tr>
 <th class="head_1">NO</th>
-<th class="head_2">SUB</th>
-<th class="head_3">ชื่อSUB</th>
 <th class="head_4">จังหวัด</th>
 <th class="head_5">เขต</th>
-<th class="head_6">รวม</th>
-{%~ for y in 0..=SSHOW_YEAR_END-SSHOW_YEAR_BEG %}
-<td class="hdyr_{{y}}">{{y+2026}}</td>
+
+{% for h in SHOW_FLDS2 %}
+{% let hh = format!("{h:?}") %}
+<td class="hdyr_{{-h.tousz()-}}">{{hh}}</td>
 {% endfor ~%}
 
 </tr>
@@ -123,17 +113,18 @@
 <tbody>
 
 {% for rw in assv.iter() %}
-{% let sbinf = sbif.get(rw.sbid).unwrap() %}
+{% let sbif0 = SubInfo::default() %}
+{% let sbinf = sbif.get(rw.sbid).unwrap_or(&sbif0) %}
 <tr>
   <td class="cell_s">{{loop.index}}</td>
-  <td class="cell_2">{{rw.sbid}}</td>
-  <td class="cell_3"><a href="/tr01?sbid={{rw.sbid}}">{{sbinf.name}}</a></td>
   <td class="cell_4">{{rw.pvid}}</td>
   <td class="cell_5">{{rw.arid}}</td>
-<td class="cell_x">{{rw.v[se_fld.tousz()].v.pan(2)}}</td>
-{% for vv in rw.vy[se_fld.tousz()] %}
+
+{% for h in SHOW_FLDS2 %}
+{% let vv = rw.v[h.tousz()].v %}
 <td class="cell_x">{{vv.pan(0)}}</td>
 {% endfor %}
+
 </tr>
 
 {% endfor %}

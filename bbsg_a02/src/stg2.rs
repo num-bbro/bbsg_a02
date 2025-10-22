@@ -292,6 +292,32 @@ pub fn chk_02_1(
                     let (mut af01, mut af03, mut af02, mut af04) = (None, None, None, None);
                     let k1 = format!("{fid}");
                     let key = fd2fd.get(&k1).unwrap_or(&"-".to_string()).to_string();
+
+                    let mut grw = EN_AVG_GRW_RATE;
+                    if let (Some(lp1), Some(lp0)) = (e0.lp24.get(&key), e0.lp23.get(&key)) {
+                        let mut pwmx = 0f32;
+                        if let Some(reps) = lp1.pos_rep.val {
+                            for vv in reps.iter().flatten() {
+                                pwmx = pwmx.max(*vv);
+                            }
+                        };
+                        let mut pwmx0 = 0f32;
+                        if let Some(reps) = lp0.pos_rep.val {
+                            for vv in reps.iter().flatten() {
+                                pwmx0 = pwmx0.max(*vv);
+                            }
+                        };
+
+                        let grw2 = if pwmx0 > 0f32 {
+                            (pwmx - pwmx0) / pwmx * 100f32
+                        } else {
+                            0f32
+                        };
+                        if grw2 > grw && grw2 < EN_MAX_GRW_RATE {
+                            grw = grw2;
+                        }
+                    }
+
                     if let Some(lp) = e0.lp24.get(&key) {
                         if let Some(vv) = lp.pos_rep.val {
                             for v in vv.iter().flatten() {
@@ -402,6 +428,7 @@ pub fn chk_02_1(
                         let mut vt10 = 0f32;
                         let mut nom1p = 0f32;
                         let mut nom3p = 0f32;
+                        let mut allsel = 0f32;
 
                         let (mut se_a, mut se_b, mut se_c) = (0.0, 0.0, 0.0);
                         let (mut sl_a, mut sl_b, mut sl_c, mut sl_3) = (0.0, 0.0, 0.0, 0.0);
@@ -415,9 +442,11 @@ pub fn chk_02_1(
                                     vt01 += 1f32;
                                     vt02 += met.kwh15;
                                 }
+                                allsel += met.kwh15;
                             } else if let MeterAccType::Large = met.met_type {
                                 vt10 += met.kwh15;
                                 print!("_{}", met.kwh15);
+                                //allsel += met.kwh15;
                             }
                             if trn.own == "P" {
                                 match met.mt_phs.clone().unwrap_or(String::new()).as_str() {
@@ -559,6 +588,7 @@ pub fn chk_02_1(
                         tr_as.v[VarType::NoMet1Ph as usize].v = nom1p;
                         tr_as.v[VarType::NoMet3Ph as usize].v = nom3p;
                         tr_as.v[VarType::NoTr as usize].v = vt12;
+                        tr_as.v[VarType::EnGrowth as usize].v = grw;
                         if trn.own == "P" {
                             tr_as.v[VarType::NoPeaTr as usize].v = vt12;
                         } else {
@@ -577,6 +607,7 @@ pub fn chk_02_1(
                         tr_as.v[VarType::EvCarLikely as usize].v = evlk;
                         tr_as.v[VarType::SelectLikely as usize].v = selk;
                         tr_as.v[VarType::SolarEnergy as usize].v = solar;
+                        tr_as.v[VarType::AllSellTr.tousz()].v = allsel;
                         //tr_as.v[VarType::OfficeCovWg.tousz()].v = aojs.len();
                         tras_mx1.max(&tr_as);
                         //s_tr_sum.add(&tr_as);
@@ -684,7 +715,7 @@ pub fn chk_02_2(
                 for (tras, tras0) in v_tras_so.iter_mut().zip(v_tras_raw.iter_mut()) {
                     tras.weigh(&we_so);
                     tras.sum();
-                    tras0.v[VarType::PowSolar as usize].v = tras.res;
+                    tras0.v[VarType::SolarRoof as usize].v = tras.res;
                 }
                 //// save ev bin
                 let bin: Vec<u8> =
@@ -753,6 +784,9 @@ pub fn chk_02_3(
     for (vt, vv) in WE_UC3 {
         we_uc3.v[vt.tousz()].v = vv;
     }
+    let evsc = ev_scurv();
+    let resc = re_scurv();
+    println!("evsc: {} resc: {}", evsc.len(), resc.len());
     for id in aids {
         let aid = id.to_string();
         let Some(ar) = pea.aream.get(&aid) else {
@@ -797,6 +831,24 @@ pub fn chk_02_3(
                         tras.v[VarType::HmChgEvTr as usize].v * 210_000f32;
                     tras0.v[VarType::PowHmChgEvTr as usize].v =
                         tras0.v[VarType::NoHmChgEvTr as usize].v * 0.007f32;
+                    for (i, rt) in evsc.iter().enumerate() {
+                        let evno = tras.v[VarType::HmChgEvTr.tousz()].v * EV_AT_2050 * rt;
+                        tras0.vy[VarType::NoHmChgEvTr.tousz()].push(evno);
+                        // ev car charger is 7kw
+                        // everage charge 2 hour / day
+                        // everage charge 1.5 hour / day
+                        // everage charge 1.2 hour / day
+                        // profit 0.42 baht per kwh
+                        //
+                        let evth = if i < 3 {
+                            0f32
+                        } else {
+                            evno * 7f32 * 1.2 * 0.42 * 365.0 * 0.5
+                        };
+                        tras0.vy[VarType::FirEvChgThb.tousz()].push(evth);
+                    }
+                    tras0.v[VarType::FirEvChgThb.tousz()].v =
+                        tras0.vy[VarType::FirEvChgThb.tousz()].iter().sum();
                 }
 
                 //// save normal bin

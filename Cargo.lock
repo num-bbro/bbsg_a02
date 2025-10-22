@@ -499,6 +499,7 @@ dependencies = [
  "bincode 2.0.1",
  "chrono",
  "csv",
+ "financial",
  "geo",
  "geo-types",
  "image 0.25.8",

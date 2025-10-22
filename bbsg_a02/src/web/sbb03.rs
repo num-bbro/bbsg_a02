@@ -10,40 +10,22 @@ pub struct Param {
     pub fld: Option<String>,
 }
 
-use crate::dcl::VarType;
 use crate::dcl::DNM;
-use crate::dcl::SHOW_FLDS;
-use crate::dcl::SSHOW_YEAR_BEG;
-use crate::dcl::SSHOW_YEAR_END;
+use crate::dcl::SHOW_FLDS2;
 use crate::p08::ld_sub_info;
 use crate::p08::SubInfo;
 use std::collections::HashMap;
 
 #[derive(Template, WebTemplate, Debug, Default)]
-#[template(path = "sbb01.html")]
+#[template(path = "sbb03.html")]
 pub struct WebTemp {
     name: String,
     assv: Vec<PeaAssVar>,
     sbif: HashMap<String, SubInfo>,
-    se_fld: VarType,
 }
 
-pub async fn sbb01(para: Query<Param>) -> WebTemp {
-    let mut fldm = HashMap::<String, VarType>::new();
-    for vt in &SHOW_FLDS {
-        let fd = format!("{:?}", vt);
-        fldm.insert(fd, vt.clone());
-    }
-    let fld = if let Some(fld) = &para.fld {
-        fld.clone()
-    } else {
-        format!("{:?}", SHOW_FLDS[0])
-    };
-    let Some(se_fld) = fldm.get(&fld) else {
-        println!("NO SELECTED FIELD");
-        return WebTemp::default();
-    };
-    let name = format!("FIELD {fld}");
+pub async fn sbb03(_para: Query<Param>) -> WebTemp {
+    let name = "SUBSTATION".to_string();
     let Ok(buf) = std::fs::read(format!("{DNM}/000-sbrw.bin")) else {
         println!("NO rw3.bin file:");
         return WebTemp::default();
@@ -62,6 +44,6 @@ pub async fn sbb01(para: Query<Param>) -> WebTemp {
         assv,
         sbif: sbif.clone(),
         //flds: FLD_LIST.to_vec(),
-        se_fld: se_fld.clone(),
+        //se_fld: se_fld.clone(),
     }
 }

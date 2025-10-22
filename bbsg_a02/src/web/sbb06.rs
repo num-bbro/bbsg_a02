@@ -1,5 +1,6 @@
 use crate::dcl::Pan;
 use crate::dcl::PeaAssVar;
+use crate::dcl::VarType;
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::Query;
@@ -10,51 +11,39 @@ pub struct Param {
     pub fld: Option<String>,
 }
 
-use crate::dcl::VarType;
 use crate::dcl::DNM;
-use crate::dcl::SHOW_FLDS;
-use crate::dcl::SSHOW_YEAR_BEG;
-use crate::dcl::SSHOW_YEAR_END;
+use crate::dcl::SHOW_FLDS3;
 use crate::p08::ld_sub_info;
 use crate::p08::SubInfo;
 use std::collections::HashMap;
 
 #[derive(Template, WebTemplate, Debug, Default)]
-#[template(path = "sbb01.html")]
+#[template(path = "sbb06.html")]
 pub struct WebTemp {
     name: String,
     assv: Vec<PeaAssVar>,
     sbif: HashMap<String, SubInfo>,
-    se_fld: VarType,
 }
 
-pub async fn sbb01(para: Query<Param>) -> WebTemp {
-    let mut fldm = HashMap::<String, VarType>::new();
-    for vt in &SHOW_FLDS {
-        let fd = format!("{:?}", vt);
-        fldm.insert(fd, vt.clone());
-    }
-    let fld = if let Some(fld) = &para.fld {
-        fld.clone()
-    } else {
-        format!("{:?}", SHOW_FLDS[0])
-    };
-    let Some(se_fld) = fldm.get(&fld) else {
-        println!("NO SELECTED FIELD");
-        return WebTemp::default();
-    };
-    let name = format!("FIELD {fld}");
-    let Ok(buf) = std::fs::read(format!("{DNM}/000-sbrw.bin")) else {
+pub async fn sbb06(_para: Query<Param>) -> WebTemp {
+    let name = "PROVINCE".to_string();
+    let Ok(buf) = std::fs::read(format!("{DNM}/000-pvrw.bin")) else {
         println!("NO rw3.bin file:");
         return WebTemp::default();
     };
     // ==== read rw3 data
-    let Ok((assv, _)): Result<(Vec<PeaAssVar>, usize), _> =
+    let Ok((mut assv, _)): Result<(Vec<PeaAssVar>, usize), _> =
         bincode::decode_from_slice(&buf[..], bincode::config::standard())
     else {
         println!("Failed to decode rw3:");
         return WebTemp::default();
     };
+    assv.sort_by(|b, a| {
+        a.v[VarType::FirCstRate.tousz()]
+            .v
+            .partial_cmp(&b.v[VarType::FirCstRate.tousz()].v)
+            .unwrap()
+    });
     //let sbif = sub_inf(); //HashMap<String, SubstInfo>
     let sbif = ld_sub_info();
     WebTemp {
@@ -62,6 +51,6 @@ pub async fn sbb01(para: Query<Param>) -> WebTemp {
         assv,
         sbif: sbif.clone(),
         //flds: FLD_LIST.to_vec(),
-        se_fld: se_fld.clone(),
+        //se_fld: se_fld.clone(),
     }
 }

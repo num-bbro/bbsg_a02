@@ -37,7 +37,7 @@ pub fn write_ass_csv_01(tr_as: &Vec<PeaAssVar>, fnm: &str) -> Result<String, Box
         VarType::ChgStnCap,
         VarType::ChgStnSell,
         VarType::MvPowSatTr,
-        VarType::PowSolar,
+        VarType::SolarRoof,
         VarType::MvVspp,
         VarType::HvSpp,
         VarType::SmallSell,
@@ -121,7 +121,7 @@ pub fn write_ass_csv_02(tr_as: &Vec<PeaAssVar>, fnm: &str) -> Result<String, Box
         VarType::ChgStnCap,
         VarType::ChgStnSell,
         VarType::MvPowSatTr,
-        VarType::PowSolar,
+        VarType::SolarRoof,
         VarType::MvVspp,
         VarType::HvSpp,
         VarType::SmallSell,
@@ -199,7 +199,7 @@ pub fn write_trn_ass_01(tr_as: &Vec<PeaAssVar>, fnm: &str) -> Result<String, Box
         VarType::ChgStnCap,
         VarType::ChgStnSell,
         VarType::MvPowSatTr,
-        VarType::PowSolar,
+        VarType::SolarRoof,
         VarType::MvVspp,
         VarType::HvSpp,
         VarType::SmallSell,
@@ -260,7 +260,7 @@ pub fn write_trn_ass_02(tr_as: &Vec<PeaAssVar>, fnm: &str) -> Result<String, Box
         VarType::ChgStnCap,
         VarType::ChgStnSell,
         VarType::MvPowSatTr,
-        VarType::PowSolar,
+        VarType::SolarRoof,
         VarType::MvVspp,
         VarType::HvSpp,
         VarType::SmallSell,
@@ -309,7 +309,7 @@ pub fn write_text_02(
         }
         writeln!(x)?;
     }
-    println!("        ??? ===== write to {fnm}");
+    //println!("        ??? ===== write to {fnm}");
     let b = x.as_bytes();
     let h = sha256::digest(b);
     std::fs::write(fnm, b)?;

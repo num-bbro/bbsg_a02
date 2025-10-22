@@ -1,5 +1,3 @@
-//use crate::dcl::PeaFeed;
-//use crate::p01::AojObj;
 use bincode::{Decode, Encode};
 use phf_macros::phf_map;
 use std::collections::HashMap;
@@ -15,7 +13,10 @@ pub const EV_AT_2050: f32 = 6_000_000f32;
 pub const EV_HR_DAY: f32 = 3.0;
 pub const EV_MWH_BAHT: f32 = 1000f32;
 pub const RE_SCURV_BEG: usize = 2018;
-pub const DNM: &str = "/mnt/e/CHMBACK/pea-data/sgdt-01";
+pub const DNM: &str = "/mnt/e/CHMBACK/pea-data/sgdt-a02";
+pub const EN_AVG_GRW_RATE: f32 = 3.6f32;
+pub const EN_MAX_GRW_RATE: f32 = 5.0f32;
+pub const RE_MV2HV_RATIO: f32 = 0.0986;
 
 #[derive(Encode, Decode, Debug, Clone, Default)]
 pub struct Pea {
@@ -205,8 +206,10 @@ pub enum VarType {
     MaxNegPowFeeder,
     MaxPosDiffFeeder,
     MaxNegDiffFeeder,
+    EnGrowth,
     NoMeterTrans,
     SmallSellTr,
+    AllSellTr,
     ChgStnCapTr,
     ChgStnSellTr,
     PwCapTr,
@@ -227,7 +230,7 @@ pub enum VarType {
     ChgStnCap,
     ChgStnSell,
     MvPowSatTr,
-    PowSolar,
+    SolarRoof,
     MvVspp,
     HvSpp,
     SmallSell,
@@ -285,13 +288,51 @@ pub enum VarType {
     FirDataEntrySave,
 
     FirEvChgThb,
-    FirSolarThb,
+    FirMvReThb,
     FirUnbSave,
     FirTrSatSave,
     FirTrPhsSatSave,
     FirNonTechLoss,
     FirEtChgThb,
     FirEbChgThb,
+
+    EirCustLossSave,
+    EirConsumSave,
+    EirGrnHsEmsSave,
+    EirCustMvRev,
+    EirCustEvSave,
+    EirCustEtrkSave,
+    EirSolaRfTopSave,
+    EirEnerResvSave,
+
+    CstMet1pIns,
+    CstMet3pIns,
+    CstTrIns,
+    CstBessIns,
+    CstPlfmIns,
+    CstCommIns,
+
+    CstMet1pImp,
+    CstMet3pImp,
+    CstTrImp,
+    CstBessImp,
+    CstPlfmImp,
+    CstCommImp,
+
+    CstMet1pOp,
+    CstMet3pOp,
+    CstTrOp,
+    CstBessOp,
+    CstPlfmOp,
+    CstCommOp,
+
+    CstCapex,
+    CstOpex,
+    FirSum,
+    EirSum,
+
+    FirCstRate,
+    EirCstRate,
 }
 
 #[derive(Encode, Decode, Debug, Clone, Default)]
@@ -352,7 +393,7 @@ pub const WE_UC1: [(VarType, f32); 11] = [
     (VarType::CntLvPowSatTr, 0.15),
     (VarType::ChgStnCap, 0.05),
     (VarType::MvPowSatTr, 0.05),
-    (VarType::PowSolar, 0.15),
+    (VarType::SolarRoof, 0.15),
     (VarType::ZoneTr, 0.05),
     (VarType::PopTr, 0.05),
     (VarType::MvVspp, 0.05),
@@ -366,7 +407,7 @@ pub const WE_UC2: [(VarType, f32); 10] = [
     (VarType::CntLvPowSatTr, 0.15),
     (VarType::ChgStnCap, 0.05),
     (VarType::MvPowSatTr, 0.15),
-    (VarType::PowSolar, 0.15),
+    (VarType::SolarRoof, 0.15),
     (VarType::ZoneTr, 0.05),
     (VarType::PopTr, 0.05),
     (VarType::MvVspp, 0.15),
@@ -379,7 +420,7 @@ pub const WE_UC2: [(VarType, f32); 10] = [
 ];
 
 pub const WE_UC3: [(VarType, f32); 8] = [
-    (VarType::PowSolar, 0.25),
+    (VarType::SolarRoof, 0.25),
     (VarType::HmChgEvTr, 0.25),
     (VarType::SmallSellTr, 0.10),
     (VarType::CntLvPowSatTr, 0.10),
@@ -612,7 +653,7 @@ pub const EV_PRV_ADJ_2: [(&str, f64, f64); 26] = [
     ("สมุทรปราการ", 0.0, 15.0),
 ];
 
-pub const FIR_LIST: [VarType; 26] = [
+pub const FIR_FLDS: [VarType; 26] = [
     VarType::FirBilAccu,
     VarType::FirCashFlow,
     VarType::FirDRSave,
@@ -634,9 +675,160 @@ pub const FIR_LIST: [VarType; 26] = [
     VarType::FirAssetValue,
     VarType::FirDataEntrySave,
     VarType::FirEvChgThb,
-    VarType::FirSolarThb,
+    VarType::FirMvReThb,
     VarType::FirUnbSave,
     VarType::FirTrSatSave,
     VarType::FirTrPhsSatSave,
     VarType::FirNonTechLoss,
+];
+
+pub const EIR_FLDS: [VarType; 8] = [
+    VarType::EirCustLossSave,
+    VarType::EirConsumSave,
+    VarType::EirGrnHsEmsSave,
+    VarType::EirCustMvRev,
+    VarType::EirCustEvSave,
+    VarType::EirCustEtrkSave,
+    VarType::EirSolaRfTopSave,
+    VarType::EirEnerResvSave,
+];
+
+pub const CAPEX_FLDS: [VarType; 12] = [
+    VarType::CstMet1pIns,
+    VarType::CstMet3pIns,
+    VarType::CstTrIns,
+    VarType::CstBessIns,
+    VarType::CstPlfmIns,
+    VarType::CstCommIns,
+    VarType::CstMet1pImp,
+    VarType::CstMet3pImp,
+    VarType::CstTrImp,
+    VarType::CstBessImp,
+    VarType::CstPlfmImp,
+    VarType::CstCommImp,
+];
+
+pub const OPEX_FLDS: [VarType; 6] = [
+    VarType::CstMet1pOp,
+    VarType::CstMet3pOp,
+    VarType::CstTrOp,
+    VarType::CstBessOp,
+    VarType::CstPlfmOp,
+    VarType::CstCommOp,
+];
+
+pub const SHOW_FLDS: [VarType; 50] = [
+    VarType::FirEvChgThb,
+    VarType::FirMvReThb,
+    VarType::FirUnbSave,
+    VarType::FirTrSatSave,
+    VarType::FirTrPhsSatSave,
+    VarType::FirNonTechLoss,
+    VarType::FirDataEntrySave,
+    VarType::FirOutLabSave,
+    VarType::FirComplainSave,
+    VarType::FirBilAccu,
+    VarType::FirCashFlow,
+    VarType::FirDRSave,
+    VarType::FirMetBoxSave,
+    VarType::FirLaborSave,
+    VarType::FirMetSell,
+    VarType::FirEMetSave,
+    VarType::FirMetReadSave,
+    VarType::FirMetDisSave,
+    VarType::FirTouSell,
+    VarType::FirTouReadSave,
+    VarType::FirTouUpdateSave,
+    VarType::FirAssetValue,
+    VarType::FirBatSubSave,
+    VarType::FirBatSvgSave,
+    VarType::FirBatEnerSave,
+    VarType::FirBatPriceDiff,
+    // ===== Cost
+    VarType::CstMet1pIns,
+    VarType::CstMet3pIns,
+    VarType::CstTrIns,
+    VarType::CstBessIns,
+    VarType::CstPlfmIns,
+    VarType::CstCommIns,
+    VarType::CstMet1pImp,
+    VarType::CstMet3pImp,
+    VarType::CstTrImp,
+    VarType::CstBessImp,
+    VarType::CstPlfmImp,
+    VarType::CstCommImp,
+    VarType::CstMet1pOp,
+    VarType::CstMet3pOp,
+    VarType::CstTrOp,
+    VarType::CstBessOp,
+    VarType::CstPlfmOp,
+    VarType::CstCommOp,
+    // ===== SUM
+    VarType::CstCapex,
+    VarType::CstOpex,
+    VarType::FirSum,
+    VarType::EirSum,
+    VarType::FirCstRate,
+    VarType::EirCstRate,
+];
+
+pub const SHOW_FLDS2: [VarType; 26] = [
+    VarType::FirEvChgThb,
+    VarType::FirMvReThb,
+    VarType::FirUnbSave,
+    VarType::FirTrSatSave,
+    VarType::FirTrPhsSatSave,
+    VarType::FirNonTechLoss,
+    VarType::FirDataEntrySave,
+    VarType::FirOutLabSave,
+    VarType::FirComplainSave,
+    VarType::FirBilAccu,
+    VarType::FirCashFlow,
+    VarType::FirDRSave,
+    VarType::FirMetBoxSave,
+    VarType::FirLaborSave,
+    VarType::FirMetSell,
+    VarType::FirEMetSave,
+    VarType::FirMetReadSave,
+    VarType::FirMetDisSave,
+    VarType::FirTouSell,
+    VarType::FirTouReadSave,
+    VarType::FirTouUpdateSave,
+    VarType::FirAssetValue,
+    VarType::FirBatSubSave,
+    VarType::FirBatSvgSave,
+    VarType::FirBatEnerSave,
+    VarType::FirBatPriceDiff,
+];
+
+pub const SHOW_FLDS3: [VarType; 26] = [
+    // ===== Scope
+    VarType::NoHmChgEvTr,
+    VarType::NoTr,
+    VarType::NoPeaTr,
+    VarType::NoCusTr,
+    // ===== Cost
+    VarType::CstMet1pIns,
+    VarType::CstMet3pIns,
+    VarType::CstTrIns,
+    VarType::CstBessIns,
+    VarType::CstPlfmIns,
+    VarType::CstCommIns,
+    VarType::CstMet1pImp,
+    VarType::CstMet3pImp,
+    VarType::CstTrImp,
+    VarType::CstBessImp,
+    VarType::CstPlfmImp,
+    VarType::CstCommImp,
+    VarType::CstMet1pOp,
+    VarType::CstMet3pOp,
+    VarType::CstTrOp,
+    VarType::CstBessOp,
+    VarType::CstPlfmOp,
+    VarType::CstCommOp,
+    // ===== SUM
+    VarType::CstCapex,
+    VarType::CstOpex,
+    VarType::FirSum,
+    VarType::EirSum,
 ];

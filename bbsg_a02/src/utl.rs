@@ -205,3 +205,46 @@ pub fn p01_chk() -> HashSet<String> {
     //println!("sele sub {}", subhs.len());
     subhs
 }
+
+pub const RE_SCURV_BEG: usize = 2018;
+pub const EV_SCURV_BEG: usize = 2021;
+pub const SCURV_WIND_BEG: usize = 2026;
+pub const SCURV_WIND_END: usize = 2040;
+
+pub fn ev_scurv() -> Vec<f32> {
+    let mut curv = Vec::<f32>::new();
+    for y in SCURV_WIND_BEG..=SCURV_WIND_END {
+        let a = (y - EV_SCURV_BEG) as f32;
+        let b = a - 14f32;
+        //let c = b * 0.3f32;
+        let c = b * 0.41f32;
+        //let d = c + 0.0f32;
+        let d = c + 1.205f32;
+        let d = -d;
+        let e = d.exp();
+        let f = 1f32 / (1f32 + e);
+        //let g = f.powf(1f32);
+        let g = f.powf(1.1f32);
+        curv.push(g);
+    }
+    curv
+}
+
+pub fn re_scurv() -> Vec<f32> {
+    let mut curv = Vec::<f32>::new();
+    for y in SCURV_WIND_BEG..=SCURV_WIND_END {
+        let a = (y - RE_SCURV_BEG) as f32;
+        let b = a - 14f32;
+        let c = b * 0.3f32;
+        //let c = b * 0.41f32;
+        let d = c + 0.0f32;
+        //let d = c + 1.205f32;
+        let d = -d;
+        let e = d.exp();
+        let f = 1f32 / (1f32 + e);
+        let g = f.powf(1f32);
+        //let g = f.powf(1.1f32);
+        curv.push(g);
+    }
+    curv
+}
