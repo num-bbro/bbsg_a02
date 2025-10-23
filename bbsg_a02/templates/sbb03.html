@@ -115,7 +115,8 @@
 <tbody>
 
 {% for rw in assv.iter() %}
-{% let sbinf = sbif.get(rw.sbid).unwrap() %}
+{% let sbif0 = SubInfo::default() %}
+{% let sbinf = sbif.get(rw.sbid).unwrap_or(&sbif0) %}
 <tr>
   <td class="cell_s">{{loop.index}}</td>
   <td class="cell_2">{{rw.sbid}}</td>

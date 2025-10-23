@@ -1,6 +1,6 @@
 [package]
 name = "bbsg_a02"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["num-bbro <num@bbro.jp>"]
 description = "num bbsg_a02"

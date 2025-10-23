@@ -101,6 +101,26 @@ impl PeaAssVar {
             }
         }
     }
+    pub fn add1(&mut self, o: &PeaAssVar) -> String {
+        for (v, o) in self.v.iter_mut().zip(o.v.iter()) {
+            match v.s {
+                SumType::Sum => v.v += o.v,
+                SumType::Max => v.v = v.v.max(o.v),
+                SumType::Min => v.v = v.v.min(o.v),
+            }
+        }
+        for (vy, oy) in self.vy.iter_mut().zip(o.vy.iter()) {
+            if vy.is_empty() && oy.len() > vy.len() {
+                let mut oya = oy.clone();
+                vy.append(&mut oya);
+            } else if vy.len() == oy.len() {
+                for (vv, ov) in vy.iter_mut().zip(oy.iter()) {
+                    *vv += *ov;
+                }
+            }
+        }
+        String::new()
+    }
     pub fn max(&mut self, o: &PeaAssVar) {
         if self.set == 0 {
             self.set += 1;

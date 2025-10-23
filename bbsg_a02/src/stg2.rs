@@ -11,10 +11,15 @@ use sglib04::geo4::PowerProdType;
 use std::collections::HashMap;
 use std::error::Error;
 
+pub const EV_CHG_POW_KW: f32 = 7.0;
+pub const EV_CAR_CHG_HOUR: f32 = 3.0;
+pub const EV_CHG_PROF_KW: f32 = 0.42;
+
 /// read 000_pea.bin
 /// read SSS.bin
 /// write
 pub fn stage_02() -> Result<(), Box<dyn Error>> {
+    println!("===== STAGE 2 =====");
     let buf = std::fs::read(format!("{DNM}/000_pea.bin")).unwrap();
     let (pea, _): (Pea, usize) =
         bincode::decode_from_slice(&buf[..], bincode::config::standard()).unwrap();
@@ -843,7 +848,7 @@ pub fn chk_02_3(
                         let evth = if i < 3 {
                             0f32
                         } else {
-                            evno * 7f32 * 1.2 * 0.42 * 365.0 * 0.5
+                            evno * EV_CHG_POW_KW * EV_CAR_CHG_HOUR * EV_CHG_PROF_KW * 365.0
                         };
                         tras0.vy[VarType::FirEvChgThb.tousz()].push(evth);
                     }

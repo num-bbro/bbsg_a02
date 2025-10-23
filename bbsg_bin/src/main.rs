@@ -8,6 +8,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let a1 = env::args().nth(1).unwrap_or("?".to_string());
     //let a2 = env::args().nth(2).unwrap_or("?".to_string());
     //let a3 = env::args().nth(3).unwrap_or("?".to_string());
+    /*
+    let vv3: Vec<Vec<f32>> = vec![
+        vec![1f32, 1f32, 1f32],
+        vec![1f32, 1f32, 1f32],
+        vec![1f32, 1f32, 1f32],
+    ];
+    let vv6: Vec<Vec<f64>> = vv3
+        .iter()
+        .map(|v| v.iter().map(|f| *f as f64).collect())
+        .collect();
+    */
     match a1.as_str() {
         "stage_13" => {
             bbsg_a02::stg1::stage_01()?;

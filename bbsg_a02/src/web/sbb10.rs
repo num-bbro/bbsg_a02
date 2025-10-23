@@ -9,7 +9,6 @@ use serde::Deserialize;
 pub struct Param {
     pub fld: Option<String>,
 }
-
 use crate::dcl::VarType;
 use crate::dcl::DNM;
 use crate::dcl::SHOW_FLDS;
@@ -17,10 +16,12 @@ use crate::dcl::SSHOW_YEAR_BEG;
 use crate::dcl::SSHOW_YEAR_END;
 use crate::p08::ld_sub_info;
 use crate::p08::SubInfo;
+//use crate::web::p08::PROV;
 use std::collections::HashMap;
 
 #[derive(Template, WebTemplate, Debug, Default)]
-#[template(path = "sbb02.html")]
+#[template(path = "sbb10.html")]
+#[allow(unreachable_code)]
 pub struct WebTemp {
     name: String,
     assv: Vec<PeaAssVar>,
@@ -28,7 +29,7 @@ pub struct WebTemp {
     se_fld: VarType,
 }
 
-pub async fn sbb02(para: Query<Param>) -> WebTemp {
+pub async fn sbb10(para: Query<Param>) -> WebTemp {
     let mut fldm = HashMap::<String, VarType>::new();
     for vt in &SHOW_FLDS {
         let fd = format!("{:?}", vt);
@@ -50,24 +51,24 @@ pub async fn sbb02(para: Query<Param>) -> WebTemp {
         return WebTemp::default();
     };
     // ==== read rw3 data
-    let Ok((assv0, _)): Result<(Vec<PeaAssVar>, usize), _> =
+    let Ok((mut assv0, _)): Result<(Vec<PeaAssVar>, usize), _> =
         bincode::decode_from_slice(&buf[..], bincode::config::standard())
     else {
         println!("Failed to decode rw3:");
         return WebTemp::default();
     };
-    let mut sumv = PeaAssVar::from(0u64);
-    let mut assv = Vec::<PeaAssVar>::new();
-    for ass in assv0 {
-        sumv.add(&ass);
-        assv.push(ass);
-    }
-    assv.sort_by(|b, a| {
+    assv0.sort_by(|b, a| {
         a.v[VarType::FirCstRate.tousz()]
             .v
             .partial_cmp(&b.v[VarType::FirCstRate.tousz()].v)
             .unwrap()
     });
+    let mut sumv = PeaAssVar::from(0u64);
+    let mut assv = Vec::<PeaAssVar>::new();
+    for ass in assv0.iter().take(25) {
+        sumv.add(ass);
+        assv.push(ass.clone());
+    }
     assv.push(sumv);
     //let sbif = sub_inf(); //HashMap<String, SubstInfo>
     let sbif = ld_sub_info();

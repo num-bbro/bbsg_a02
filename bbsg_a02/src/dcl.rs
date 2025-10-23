@@ -219,11 +219,16 @@ pub enum VarType {
     PkPowTr,
     LargeSellTr,
     AllNoMeterTr,
+
     NoMet1Ph,
     NoMet3Ph,
     NoTr,
     NoPeaTr,
     NoCusTr,
+    BessMWh,
+    NoBess,
+    NoDevice,
+
     HmChgEvTr,
     LvPowSatTr,
     CntLvPowSatTr,
@@ -325,9 +330,11 @@ pub enum VarType {
     CstBessOp,
     CstPlfmOp,
     CstCommOp,
+    CstReinvest,
 
-    CstCapex,
-    CstOpex,
+    CstCapEx,
+    CstOpEx,
+    CstCapOpEx,
     FirSum,
     EirSum,
 
@@ -693,7 +700,7 @@ pub const EIR_FLDS: [VarType; 8] = [
     VarType::EirEnerResvSave,
 ];
 
-pub const CAPEX_FLDS: [VarType; 12] = [
+pub const CAPEX_FLDS: [VarType; 13] = [
     VarType::CstMet1pIns,
     VarType::CstMet3pIns,
     VarType::CstTrIns,
@@ -706,6 +713,7 @@ pub const CAPEX_FLDS: [VarType; 12] = [
     VarType::CstBessImp,
     VarType::CstPlfmImp,
     VarType::CstCommImp,
+    VarType::CstReinvest,
 ];
 
 pub const OPEX_FLDS: [VarType; 6] = [
@@ -717,7 +725,7 @@ pub const OPEX_FLDS: [VarType; 6] = [
     VarType::CstCommOp,
 ];
 
-pub const SHOW_FLDS: [VarType; 50] = [
+pub const SHOW_FLDS: [VarType; 52] = [
     VarType::FirEvChgThb,
     VarType::FirMvReThb,
     VarType::FirUnbSave,
@@ -763,9 +771,11 @@ pub const SHOW_FLDS: [VarType; 50] = [
     VarType::CstBessOp,
     VarType::CstPlfmOp,
     VarType::CstCommOp,
+    VarType::CstReinvest,
     // ===== SUM
-    VarType::CstCapex,
-    VarType::CstOpex,
+    VarType::CstCapEx,
+    VarType::CstOpEx,
+    VarType::CstCapOpEx,
     VarType::FirSum,
     VarType::EirSum,
     VarType::FirCstRate,
@@ -801,12 +811,17 @@ pub const SHOW_FLDS2: [VarType; 26] = [
     VarType::FirBatPriceDiff,
 ];
 
-pub const SHOW_FLDS3: [VarType; 26] = [
+pub const SHOW_FLDS3: [VarType; 33] = [
     // ===== Scope
-    VarType::NoHmChgEvTr,
     VarType::NoTr,
     VarType::NoPeaTr,
     VarType::NoCusTr,
+    VarType::NoMet1Ph,
+    VarType::NoMet3Ph,
+    VarType::BessMWh,
+    VarType::NoBess,
+    VarType::NoDevice,
+    VarType::NoHmChgEvTr,
     // ===== Cost
     VarType::CstMet1pIns,
     VarType::CstMet3pIns,
@@ -826,9 +841,11 @@ pub const SHOW_FLDS3: [VarType; 26] = [
     VarType::CstBessOp,
     VarType::CstPlfmOp,
     VarType::CstCommOp,
+    VarType::CstReinvest,
     // ===== SUM
-    VarType::CstCapex,
-    VarType::CstOpex,
+    VarType::CstCapEx,
+    VarType::CstOpEx,
+    VarType::CstCapOpEx,
     VarType::FirSum,
     VarType::EirSum,
 ];

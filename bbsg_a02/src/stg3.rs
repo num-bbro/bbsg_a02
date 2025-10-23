@@ -22,6 +22,7 @@ use crate::cst1::cst_m3p_op;
 use crate::cst1::cst_plfm_imp;
 use crate::cst1::cst_plfm_ins;
 use crate::cst1::cst_plfm_op;
+use crate::cst1::cst_reinvest;
 use crate::cst1::cst_tr_imp;
 use crate::cst1::cst_tr_ins;
 use crate::cst1::cst_tr_op;
@@ -33,12 +34,30 @@ pub const CALL_CENTER_COST_UP: f32 = 0.04f32;
 pub const ASSET_WORTH_RATIO: f32 = 0.2f32;
 pub const MODEL_ENTRY_RATIO: f32 = 0.05f32;
 pub const MODEL_ENTRY_COST: f32 = 1000f32;
+pub const RENEW_HOUR_PER_DAY: f32 = 3.0;
+pub const RENEW_SAVE_PER_MWH: f32 = 500f32;
+pub const PEAK_POWER_RATIO: f32 = 0.4;
+pub const UNBAL_LOSS_CLAIM_RATE: f32 = 0.6;
+pub const TRANS_REPL_CLAIM_RATE: f32 = 0.6;
+pub const UNBAL_REPL_CLAIM_RATE: f32 = 0.6;
+pub const NOTEC_LOSS_CLAIM_RATE: f32 = 0.6;
+
+pub const NON_TECH_LOSS_RATIO: f32 = 0.02;
+//pub const UNBAL_HOUR_PER_DAY: f32 = 4.0;
+pub const UNBAL_HOUR_PER_DAY: f32 = 2.0;
+pub const SAVE_LOSS_UNIT_PRICE: f32 = 4.0;
+pub const TRANS_REPL_UNIT_PRICE: f32 = 150_000f32;
+pub const TRANS_REPL_WITHIN_YEAR: f32 = 5.0;
+
+pub const UNBAL_CALC_FACTOR: f32 = 1.0;
+pub const REINVEST_RATE: f32 = 0.01;
 
 //use sglib04::web1::ENERGY_GRW_RATE;
 
 /// ประมวลผลรวมเพื่อเกณฑ์การคัดเลือก
 /// summery transformaters to substation
 pub fn stage_03() -> Result<(), Box<dyn Error>> {
+    println!("===== STAGE 3 =====");
     let buf = std::fs::read(format!("{DNM}/000_pea.bin")).unwrap();
     let (pea, _): (Pea, usize) =
         bincode::decode_from_slice(&buf[..], bincode::config::standard()).unwrap();
@@ -181,6 +200,9 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 };
                 //if let Some(sbtr) = sbtr.get(&sbas.sbid) {
                 let (mut sub, mut svg, mut dif, mut eng, bescap) = ben_bess_calc(sbtr, &sb);
+                let nobess = if bescap > 0f32 { 1.0 } else { 0.0 };
+                sbas.v[VarType::BessMWh.tousz()].v = bescap;
+                sbas.v[VarType::NoBess.tousz()].v = nobess;
                 let mut ben8 = crate::ben1::ben_bill_accu(sbtr);
                 let mut ben9 = crate::ben1::ben_cash_flow(sbtr);
                 let mut ben10 = crate::ben1::ben_dr_save(sbtr);
@@ -240,26 +262,31 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 sbas.vy[VarType::FirAssetValue.tousz()].append(&mut ben26);
                 sbas.vy[VarType::FirDataEntrySave.tousz()].append(&mut ben27);
 
-                sbas.vy[VarType::CstMet1pIns.tousz()].append(&mut cst_m1p_ins(sbtr));
-                sbas.vy[VarType::CstMet3pIns.tousz()].append(&mut cst_m3p_ins(sbtr));
-                sbas.vy[VarType::CstTrIns.tousz()].append(&mut cst_tr_ins(sbtr));
+                let nome1 = sbas.v[VarType::NoMet1Ph.tousz()].v;
+                let nome3 = sbas.v[VarType::NoMet3Ph.tousz()].v;
+                let notr = sbas.v[VarType::NoTr.tousz()].v;
+                let nodev = nome1 + nome3 + notr + nobess;
+                sbas.v[VarType::NoDevice.tousz()].v = nodev;
+                sbas.vy[VarType::CstMet1pIns.tousz()].append(&mut cst_m1p_ins(sbtr, nome1));
+                sbas.vy[VarType::CstMet3pIns.tousz()].append(&mut cst_m3p_ins(sbtr, nome3));
+                sbas.vy[VarType::CstTrIns.tousz()].append(&mut cst_tr_ins(sbtr, notr));
                 sbas.vy[VarType::CstBessIns.tousz()].append(&mut cst_bes_ins(sbtr, bescap));
-                sbas.vy[VarType::CstPlfmIns.tousz()].append(&mut cst_plfm_ins(sbtr, bescap));
-                sbas.vy[VarType::CstCommIns.tousz()].append(&mut cst_comm_ins(sbtr, bescap));
+                sbas.vy[VarType::CstPlfmIns.tousz()].append(&mut cst_plfm_ins(sbtr, nodev));
+                sbas.vy[VarType::CstCommIns.tousz()].append(&mut cst_comm_ins(sbtr, nodev));
 
-                sbas.vy[VarType::CstMet1pImp.tousz()].append(&mut cst_m1p_imp(sbtr));
-                sbas.vy[VarType::CstMet3pImp.tousz()].append(&mut cst_m3p_imp(sbtr));
-                sbas.vy[VarType::CstTrImp.tousz()].append(&mut cst_tr_imp(sbtr));
+                sbas.vy[VarType::CstMet1pImp.tousz()].append(&mut cst_m1p_imp(sbtr, nome1));
+                sbas.vy[VarType::CstMet3pImp.tousz()].append(&mut cst_m3p_imp(sbtr, nome3));
+                sbas.vy[VarType::CstTrImp.tousz()].append(&mut cst_tr_imp(sbtr, notr));
                 sbas.vy[VarType::CstBessImp.tousz()].append(&mut cst_bes_imp(sbtr, bescap));
-                sbas.vy[VarType::CstPlfmImp.tousz()].append(&mut cst_plfm_imp(sbtr, bescap));
-                sbas.vy[VarType::CstCommImp.tousz()].append(&mut cst_comm_imp(sbtr, bescap));
+                sbas.vy[VarType::CstPlfmImp.tousz()].append(&mut cst_plfm_imp(sbtr, nodev));
+                sbas.vy[VarType::CstCommImp.tousz()].append(&mut cst_comm_imp(sbtr, nodev));
 
-                sbas.vy[VarType::CstMet1pOp.tousz()].append(&mut cst_m1p_op(sbtr));
-                sbas.vy[VarType::CstMet3pOp.tousz()].append(&mut cst_m3p_op(sbtr));
-                sbas.vy[VarType::CstTrOp.tousz()].append(&mut cst_tr_op(sbtr));
+                sbas.vy[VarType::CstMet1pOp.tousz()].append(&mut cst_m1p_op(sbtr, nome1));
+                sbas.vy[VarType::CstMet3pOp.tousz()].append(&mut cst_m3p_op(sbtr, nome3));
+                sbas.vy[VarType::CstTrOp.tousz()].append(&mut cst_tr_op(sbtr, notr));
                 sbas.vy[VarType::CstBessOp.tousz()].append(&mut cst_bes_op(sbtr, bescap));
-                sbas.vy[VarType::CstPlfmOp.tousz()].append(&mut cst_plfm_op(sbtr, bescap));
-                sbas.vy[VarType::CstCommOp.tousz()].append(&mut cst_comm_op(sbtr, bescap));
+                sbas.vy[VarType::CstPlfmOp.tousz()].append(&mut cst_plfm_op(sbtr, nodev));
+                sbas.vy[VarType::CstCommOp.tousz()].append(&mut cst_comm_op(sbtr, nodev));
 
                 sbas.v[VarType::CstMet1pIns.tousz()].v =
                     sbas.vy[VarType::CstMet1pIns.tousz()].iter().sum();
@@ -309,7 +336,6 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 //let pwmx = sbas.v[VarType::SubPowCap as usize].v;
                 //let pwmx = trf_kva_2_kw(pwmx);
                 //let pwrt = RE_MV2HV_RATIO * 0.5f32;
-                let pwrt = 0.1;
                 for (i, rt) in resc.iter().enumerate() {
                     // re 4 hours in one day
                     // all year 365 days
@@ -317,7 +343,11 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                     let rerev = if i < 3 {
                         0f32
                     } else {
-                        rt * pwrt * pwmx * 4.0 * 365.0 * 500.0
+                        rt * pwmx
+                            * PEAK_POWER_RATIO
+                            * RENEW_HOUR_PER_DAY
+                            * 365.0
+                            * RENEW_SAVE_PER_MWH
                     };
                     //let rerev = rt * pwrt * pwmx;
                     sbas.vy[VarType::FirMvReThb.tousz()].push(rerev);
@@ -329,18 +359,27 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 // loss occur 4 hours per day
                 // loss value 4.0 thb per kw
                 // loss 365 days per year
-                let unb_los = sbas.v[VarType::UnbalPowLossKw.tousz()].v * 4.0 * 4.0 * 365.0;
+                //let unb_los = sbas.v[VarType::UnbalPowLossKw.tousz()].v * 4.0 * 4.0 * 365.0;
+                let unb_los = sbas.v[VarType::UnbalPowLossKw.tousz()].v
+                    * UNBAL_HOUR_PER_DAY
+                    * SAVE_LOSS_UNIT_PRICE
+                    * UNBAL_CALC_FACTOR
+                    * 365.0;
                 //let unb_los = sbas.v[VarType::UnbalPowLossKw.tousz()].v * 4.0 * 4.0;
                 //
                 // claim save ratio 0.5
-                let mut los_sav = unb_los * 0.15;
+                let mut los_sav = unb_los * UNBAL_LOSS_CLAIM_RATE;
                 //
                 // transformer may die within 5 years
                 // unit price for replace transformers
                 // claim save ratio 0.5
-                let mut tr_sav = sbas.v[VarType::CntTrSatLoss.tousz()].v / 5.0 * 200_000f32 * 0.5;
-                let mut ubt_sav =
-                    sbas.v[VarType::CntTrUnbalLoss.tousz()].v / 5.0 * 200_000f32 * 0.3;
+                let mut tr_sav = sbas.v[VarType::CntTrSatLoss.tousz()].v / TRANS_REPL_WITHIN_YEAR
+                    * TRANS_REPL_UNIT_PRICE
+                    * TRANS_REPL_CLAIM_RATE;
+                let mut ubt_sav = sbas.v[VarType::CntTrUnbalLoss.tousz()].v
+                    / TRANS_REPL_WITHIN_YEAR
+                    * TRANS_REPL_UNIT_PRICE
+                    * UNBAL_REPL_CLAIM_RATE;
                 // all 12 months
                 // factor 0.9 since it was peak month data
                 // unit price
@@ -348,7 +387,11 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 //let mut all_sel = sbas.v[VarType::AllSellTr.tousz()].v * 0.9 * 4f32 * 0.01;
                 //let mut all_sel = sbas.v[VarType::AllSellTr.tousz()].v;
                 //let mut all_sel = sbas.v[VarType::AllSellTr.tousz()].v * 0.01 * 12.0 * 4f32 * 0.9;
-                let mut all_sel = sbas.v[VarType::AllSellTr.tousz()].v * 0.01 * 12.0 * 4f32 * 0.6;
+                let mut all_sel = sbas.v[VarType::AllSellTr.tousz()].v
+                    * NON_TECH_LOSS_RATIO
+                    * 12.0 // in one year
+                    * SAVE_LOSS_UNIT_PRICE
+                    * NOTEC_LOSS_CLAIM_RATE;
                 //sbas.v[VarType::AllSellTr.tousz()].v * 12.0 * 0.9 * 4_000f32 * 0.01;
                 use sglib04::web1::ENERGY_GRW_RATE;
                 for i in 0..15 {
@@ -379,31 +422,47 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 let mut fir_cpx_opx: Vec<f32> = vec![0f32; 15];
                 let mut eir_cpx_opx: Vec<f32> = vec![0f32; 15];
 
+                // CAPOPEX
+                let mut capop: Vec<f32> = vec![0f32; 15];
+
                 // CAPEX
-                sbas.v[VarType::CstCapex.tousz()].v =
+                sbas.v[VarType::CstCapEx.tousz()].v =
                     CAPEX_FLDS.iter().map(|vt| sbas.v[vt.tousz()].v).sum();
                 let mut vy0: Vec<f32> = vec![0f32; 15];
                 for vt in &CAPEX_FLDS {
                     for (i, vy) in sbas.vy[vt.tousz()].iter().enumerate() {
                         vy0[i] += vy;
+                        capop[i] += vy;
                         fir_cpx_opx[i] -= vy;
                         eir_cpx_opx[i] -= vy;
                     }
                 }
-                sbas.vy[VarType::CstCapex.tousz()] = vy0;
+                sbas.vy[VarType::CstCapEx.tousz()] = vy0;
+
+                let reinv = sbas.v[VarType::CstCapEx.tousz()].v * REINVEST_RATE;
+
+                sbas.vy[VarType::CstReinvest.tousz()].append(&mut cst_reinvest(reinv));
+                sbas.v[VarType::CstReinvest.tousz()].v =
+                    sbas.vy[VarType::CstReinvest.tousz()].iter().sum();
 
                 // OPEX
-                sbas.v[VarType::CstOpex.tousz()].v =
+                sbas.v[VarType::CstOpEx.tousz()].v =
                     OPEX_FLDS.iter().map(|vt| sbas.v[vt.tousz()].v).sum();
                 let mut vy0: Vec<f32> = vec![0f32; 15];
                 for vt in &OPEX_FLDS {
                     for (i, vy) in sbas.vy[vt.tousz()].iter().enumerate() {
                         vy0[i] += vy;
+                        capop[i] += vy;
                         fir_cpx_opx[i] -= vy;
                         eir_cpx_opx[i] -= vy;
                     }
                 }
-                sbas.vy[VarType::CstOpex.tousz()] = vy0;
+                sbas.vy[VarType::CstOpEx.tousz()] = vy0;
+
+                sbas.v[VarType::CstCapOpEx.tousz()].v = sbas.v[VarType::CstOpEx.tousz()].v
+                    + sbas.v[VarType::CstCapEx.tousz()].v
+                    + sbas.v[VarType::CstReinvest.tousz()].v;
+                sbas.vy[VarType::CstCapOpEx.tousz()] = capop;
 
                 // FIR
                 sbas.v[VarType::FirSum.tousz()].v =
@@ -455,6 +514,22 @@ pub fn stage_03() -> Result<(), Box<dyn Error>> {
                 v_sbas.push(sbas);
                 //println!("   {sid} - {}", v_tras.len());
             } // end sub loop
+
+            // check if already exists
+            let pv = pvas.pvid.clone();
+            let mut tmp = Vec::<PeaAssVar>::new();
+            let mut add = Vec::<PeaAssVar>::new();
+            tmp.append(&mut v_pvas);
+            for a in tmp {
+                if a.pvid == pv {
+                    add.push(a);
+                } else {
+                    v_pvas.push(a);
+                }
+            }
+            while let Some(a) = add.pop() {
+                pvas.add(&a);
+            }
 
             // re-calculation of value
             pvas.v[VarType::LvPowSatTr as usize].v =

@@ -2,7 +2,7 @@ use axum::routing::get;
 use std::error::Error;
 
 pub async fn web1() -> Result<(), Box<dyn Error>> {
-    println!("run1");
+    println!("web1");
     let app = axum::Router::new()
         // field
         .route("/sbb01", get(crate::web::sbb01::sbb01))
@@ -11,6 +11,12 @@ pub async fn web1() -> Result<(), Box<dyn Error>> {
         .route("/sbb04", get(crate::web::sbb04::sbb04))
         .route("/sbb05", get(crate::web::sbb05::sbb05))
         .route("/sbb06", get(crate::web::sbb06::sbb06))
+        .route("/sbb07", get(crate::web::sbb07::sbb07))
+        .route("/sbb08", get(crate::web::sbb08::sbb08))
+        .route("/sbb09", get(crate::web::sbb09::sbb09))
+        .route("/sbb10", get(crate::web::sbb10::sbb10))
+        .route("/sbb11", get(crate::web::sbb11::sbb11))
+        .route("/sbb12", get(crate::web::sbb12::sbb12))
         // sub
         .route("/sba01", get(crate::sba01::sba01))
         .route("/sba02", get(crate::sba02::sba02))

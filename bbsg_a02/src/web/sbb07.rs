@@ -9,7 +9,6 @@ use serde::Deserialize;
 pub struct Param {
     pub fld: Option<String>,
 }
-
 use crate::dcl::VarType;
 use crate::dcl::DNM;
 use crate::dcl::SHOW_FLDS;
@@ -17,10 +16,12 @@ use crate::dcl::SSHOW_YEAR_BEG;
 use crate::dcl::SSHOW_YEAR_END;
 use crate::p08::ld_sub_info;
 use crate::p08::SubInfo;
+use crate::web::p08::PROV;
 use std::collections::HashMap;
 
 #[derive(Template, WebTemplate, Debug, Default)]
-#[template(path = "sbb02.html")]
+#[template(path = "sbb07.html")]
+#[allow(unreachable_code)]
 pub struct WebTemp {
     name: String,
     assv: Vec<PeaAssVar>,
@@ -28,7 +29,7 @@ pub struct WebTemp {
     se_fld: VarType,
 }
 
-pub async fn sbb02(para: Query<Param>) -> WebTemp {
+pub async fn sbb07(para: Query<Param>) -> WebTemp {
     let mut fldm = HashMap::<String, VarType>::new();
     for vt in &SHOW_FLDS {
         let fd = format!("{:?}", vt);
@@ -59,6 +60,9 @@ pub async fn sbb02(para: Query<Param>) -> WebTemp {
     let mut sumv = PeaAssVar::from(0u64);
     let mut assv = Vec::<PeaAssVar>::new();
     for ass in assv0 {
+        if !PROV.contains(&ass.pvid.as_str()) {
+            continue;
+        }
         sumv.add(&ass);
         assv.push(ass);
     }

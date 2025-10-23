@@ -1,5 +1,6 @@
 use crate::dcl::Pan;
 use crate::dcl::PeaAssVar;
+use crate::dcl::VarType;
 use askama::Template;
 use askama_web::WebTemplate;
 use axum::extract::Query;
@@ -10,42 +11,24 @@ pub struct Param {
     pub fld: Option<String>,
 }
 
-use crate::dcl::VarType;
 use crate::dcl::DNM;
-use crate::dcl::SHOW_FLDS;
-use crate::dcl::SSHOW_YEAR_BEG;
-use crate::dcl::SSHOW_YEAR_END;
+use crate::dcl::SHOW_FLDS2;
 use crate::p08::ld_sub_info;
 use crate::p08::SubInfo;
+use crate::web::p08::PROV;
 use std::collections::HashMap;
 
 #[derive(Template, WebTemplate, Debug, Default)]
-#[template(path = "sbb02.html")]
+#[template(path = "sbb09.html")]
 pub struct WebTemp {
     name: String,
     assv: Vec<PeaAssVar>,
     sbif: HashMap<String, SubInfo>,
-    se_fld: VarType,
 }
 
-pub async fn sbb02(para: Query<Param>) -> WebTemp {
-    let mut fldm = HashMap::<String, VarType>::new();
-    for vt in &SHOW_FLDS {
-        let fd = format!("{:?}", vt);
-        fldm.insert(fd, vt.clone());
-    }
-    let fld = if let Some(fld) = &para.fld {
-        fld.clone()
-    } else {
-        format!("{:?}", SHOW_FLDS[0])
-    };
-    let Some(se_fld) = fldm.get(&fld) else {
-        println!("NO SELECTED FIELD");
-        return WebTemp::default();
-    };
-    let name = format!("FIELD {fld}");
+pub async fn sbb09(_para: Query<Param>) -> WebTemp {
+    let name = "PROVINCE".to_string();
     let Ok(buf) = std::fs::read(format!("{DNM}/000-pvrw.bin")) else {
-        //let Ok(buf) = std::fs::read(format!("{DNM}/000-sbrw.bin")) else {
         println!("NO rw3.bin file:");
         return WebTemp::default();
     };
@@ -59,6 +42,9 @@ pub async fn sbb02(para: Query<Param>) -> WebTemp {
     let mut sumv = PeaAssVar::from(0u64);
     let mut assv = Vec::<PeaAssVar>::new();
     for ass in assv0 {
+        if !PROV.contains(&ass.pvid.as_str()) {
+            continue;
+        }
         sumv.add(&ass);
         assv.push(ass);
     }
@@ -76,6 +62,6 @@ pub async fn sbb02(para: Query<Param>) -> WebTemp {
         assv,
         sbif: sbif.clone(),
         //flds: FLD_LIST.to_vec(),
-        se_fld: se_fld.clone(),
+        //se_fld: se_fld.clone(),
     }
 }

@@ -35,6 +35,7 @@ use std::error::Error;
 ///
 pub fn stage_01() -> Result<(), Box<dyn Error>> {
     //let dnm = "/mnt/e/CHMBACK/pea-data/c01_pea";
+    println!("===== STAGE 1 =====");
     let g0 = ProcEngine::prep5();
     let pea = c01_chk_01_01(DNM, &g0)?;
     c01_chk_01_02(&pea, DNM, &g0)?;

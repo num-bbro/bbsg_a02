@@ -32,18 +32,25 @@ pub async fn sbb04(_para: Query<Param>) -> WebTemp {
         return WebTemp::default();
     };
     // ==== read rw3 data
-    let Ok((mut assv, _)): Result<(Vec<PeaAssVar>, usize), _> =
+    let Ok((assv0, _)): Result<(Vec<PeaAssVar>, usize), _> =
         bincode::decode_from_slice(&buf[..], bincode::config::standard())
     else {
         println!("Failed to decode rw3:");
         return WebTemp::default();
     };
+    let mut sumv = PeaAssVar::from(0u64);
+    let mut assv = Vec::<PeaAssVar>::new();
+    for ass in assv0 {
+        sumv.add(&ass);
+        assv.push(ass);
+    }
     assv.sort_by(|b, a| {
         a.v[VarType::FirCstRate.tousz()]
             .v
             .partial_cmp(&b.v[VarType::FirCstRate.tousz()].v)
             .unwrap()
     });
+    assv.push(sumv);
     //let sbif = sub_inf(); //HashMap<String, SubstInfo>
     let sbif = ld_sub_info();
     WebTemp {
